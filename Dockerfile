@@ -1,6 +1,9 @@
 # Stage 1: Build
 FROM eclipse-temurin:25-jdk-noble AS build
 
+ARG GITHUB_ACTOR
+ARG GITHUB_TOKEN
+
 WORKDIR /workspace
 
 COPY gradlew .
@@ -8,11 +11,11 @@ COPY gradle/ gradle/
 COPY settings.gradle.kts .
 COPY build.gradle.kts .
 
-RUN ./gradlew dependencies --no-daemon --quiet
+RUN GITHUB_ACTOR=${GITHUB_ACTOR} GITHUB_TOKEN=${GITHUB_TOKEN} ./gradlew dependencies --no-daemon --quiet
 
 COPY src/ src/
 
-RUN ./gradlew bootJar --no-daemon -x test
+RUN GITHUB_ACTOR=${GITHUB_ACTOR} GITHUB_TOKEN=${GITHUB_TOKEN} ./gradlew bootJar --no-daemon -x test
 
 # Stage 2: Runtime
 FROM eclipse-temurin:25-jre-noble AS runtime

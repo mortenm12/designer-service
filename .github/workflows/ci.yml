@@ -48,14 +48,14 @@ jobs:
         run: ./gradlew classes --no-daemon
         env:
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
 
       - name: Run tests
         run: ./gradlew test --no-daemon
         env:
           SPRING_PROFILES_ACTIVE: test
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
 
       - name: Publish test report
         uses: mikepenz/action-junit-report@v5
@@ -64,10 +64,11 @@ jobs:
           report_paths: '**/build/test-results/test/TEST-*.xml'
 
       - name: Build Docker image
-        run: docker build -t designer-service:ci .
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker build \
+            --build-arg GITHUB_ACTOR=${{ github.actor }} \
+            --build-arg GITHUB_TOKEN=${{ secrets.PACKAGES_TOKEN }} \
+            -t designer-service:ci .
 
   lint:
     name: Lint (Checkstyle)
@@ -90,4 +91,4 @@ jobs:
       - run: ./gradlew checkstyleMain checkstyleTest --no-daemon
         env:
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
