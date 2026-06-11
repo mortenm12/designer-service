@@ -44,9 +44,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // ── Data ─────────────────────────────────────────────────────────────────
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.flywaydb:flyway-database-postgresql")
-    runtimeOnly("org.postgresql:postgresql")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
     // ── Security ─────────────────────────────────────────────────────────────
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -72,7 +70,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:mongodb")
 }
 
 checkstyle {

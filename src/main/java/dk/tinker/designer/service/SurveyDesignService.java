@@ -13,6 +13,7 @@ import dk.tinker.model.Page;
 import dk.tinker.model.PageElement;
 import dk.tinker.model.Questionnaire;
 import dk.tinker.util.QuistionnaireSerializer;
+import org.bson.Document;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,7 @@ public class SurveyDesignService {
                     .map(Locale::forLanguageTag)
                     .forEach(questionnaire.getSupportedLocales()::add);
         }
-        String structure = QuistionnaireSerializer.serialize(questionnaire);
+        Document structure = toDocument(questionnaire);
         SurveyDefinition definition = new SurveyDefinition(auth.getName(), request.title(), structure);
         return toDetailResponse(repository.save(definition));
     }
@@ -61,8 +62,7 @@ public class SurveyDesignService {
 
     public SurveyDetailResponse updateSurvey(Authentication auth, UUID id, UpdateSurveyRequest request) {
         SurveyDefinition definition = findOwned(auth, id);
-        String structure = QuistionnaireSerializer.serialize(request.structure());
-        definition.update(request.title(), structure);
+        definition.update(request.title(), toDocument(request.structure()));
         return toDetailResponse(repository.save(definition));
     }
 
@@ -83,71 +83,79 @@ public class SurveyDesignService {
 
     public SurveyDetailResponse addPage(Authentication auth, UUID surveyId) {
         SurveyDefinition definition = findOwned(auth, surveyId);
-        Questionnaire questionnaire = QuistionnaireSerializer.deserialize(definition.getStructure());
+        Questionnaire questionnaire = fromDocument(definition.getStructure());
         questionnaire.addPage(new Page());
-        definition.updateStructure(QuistionnaireSerializer.serialize(questionnaire));
+        definition.updateStructure(toDocument(questionnaire));
         return toDetailResponse(repository.save(definition));
     }
 
     public SurveyDetailResponse replacePage(Authentication auth, UUID surveyId, UUID pageId, Page page) {
         SurveyDefinition definition = findOwned(auth, surveyId);
-        Questionnaire questionnaire = QuistionnaireSerializer.deserialize(definition.getStructure());
+        Questionnaire questionnaire = fromDocument(definition.getStructure());
         List<Page> pages = questionnaire.getPages();
         int index = findPageIndex(pages, pageId);
         page.setId(pageId);
         pages.set(index, page);
-        definition.updateStructure(QuistionnaireSerializer.serialize(questionnaire));
+        definition.updateStructure(toDocument(questionnaire));
         return toDetailResponse(repository.save(definition));
     }
 
     public SurveyDetailResponse removePage(Authentication auth, UUID surveyId, UUID pageId) {
         SurveyDefinition definition = findOwned(auth, surveyId);
-        Questionnaire questionnaire = QuistionnaireSerializer.deserialize(definition.getStructure());
+        Questionnaire questionnaire = fromDocument(definition.getStructure());
         List<Page> pages = questionnaire.getPages();
         int index = findPageIndex(pages, pageId);
         pages.remove(index);
-        definition.updateStructure(QuistionnaireSerializer.serialize(questionnaire));
+        definition.updateStructure(toDocument(questionnaire));
         return toDetailResponse(repository.save(definition));
     }
 
     public SurveyDetailResponse addElement(
             Authentication auth, UUID surveyId, UUID pageId, PageElement element) {
         SurveyDefinition definition = findOwned(auth, surveyId);
-        Questionnaire questionnaire = QuistionnaireSerializer.deserialize(definition.getStructure());
+        Questionnaire questionnaire = fromDocument(definition.getStructure());
         Page page = findPage(questionnaire.getPages(), pageId);
         page.addPageElement(element);
-        definition.updateStructure(QuistionnaireSerializer.serialize(questionnaire));
+        definition.updateStructure(toDocument(questionnaire));
         return toDetailResponse(repository.save(definition));
     }
 
     public SurveyDetailResponse replaceElement(
             Authentication auth, UUID surveyId, UUID pageId, UUID elementId, PageElement element) {
         SurveyDefinition definition = findOwned(auth, surveyId);
-        Questionnaire questionnaire = QuistionnaireSerializer.deserialize(definition.getStructure());
+        Questionnaire questionnaire = fromDocument(definition.getStructure());
         Page page = findPage(questionnaire.getPages(), pageId);
         List<PageElement> elements = page.getPageElements();
         int index = findElementIndex(elements, elementId);
         element.setId(elementId);
         elements.set(index, element);
-        definition.updateStructure(QuistionnaireSerializer.serialize(questionnaire));
+        definition.updateStructure(toDocument(questionnaire));
         return toDetailResponse(repository.save(definition));
     }
 
     public SurveyDetailResponse removeElement(
             Authentication auth, UUID surveyId, UUID pageId, UUID elementId) {
         SurveyDefinition definition = findOwned(auth, surveyId);
-        Questionnaire questionnaire = QuistionnaireSerializer.deserialize(definition.getStructure());
+        Questionnaire questionnaire = fromDocument(definition.getStructure());
         Page page = findPage(questionnaire.getPages(), pageId);
         List<PageElement> elements = page.getPageElements();
         int index = findElementIndex(elements, elementId);
         elements.remove(index);
-        definition.updateStructure(QuistionnaireSerializer.serialize(questionnaire));
+        definition.updateStructure(toDocument(questionnaire));
         return toDetailResponse(repository.save(definition));
     }
 
     private SurveyDefinition findOwned(Authentication auth, UUID id) {
         return repository.findByIdAndOwnerId(id, auth.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("Survey", id));
+    }
+
+    private Document toDocument(Questionnaire questionnaire) {
+        return Document.parse(QuistionnaireSerializer.serialize(questionnaire));
+    }
+
+    private Questionnaire fromDocument(Document document) {
+        return QuistionnaireSerializer.deserialize(document.toJson());
     }
 
     private int findPageIndex(List<Page> pages, UUID pageId) {
@@ -186,7 +194,7 @@ public class SurveyDesignService {
     }
 
     private SurveyDetailResponse toDetailResponse(SurveyDefinition definition) {
-        Questionnaire questionnaire = QuistionnaireSerializer.deserialize(definition.getStructure());
+        Questionnaire questionnaire = fromDocument(definition.getStructure());
         return new SurveyDetailResponse(
                 definition.getId(),
                 definition.getTitle(),

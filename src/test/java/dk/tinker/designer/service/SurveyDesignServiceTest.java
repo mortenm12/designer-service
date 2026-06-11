@@ -8,6 +8,7 @@ import dk.tinker.designer.domain.SurveyStatus;
 import dk.tinker.designer.exception.ResourceNotFoundException;
 import dk.tinker.designer.repository.SurveyDefinitionRepository;
 import dk.tinker.util.QuistionnaireSerializer;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,11 +44,14 @@ class SurveyDesignServiceTest {
         when(auth.getName()).thenReturn("user-123");
     }
 
+    private static Document emptyStructure() {
+        return Document.parse(QuistionnaireSerializer.serialize(new dk.tinker.model.Questionnaire()));
+    }
+
     @Test
     void createSurvey_persistsAndReturnsDetail() {
         CreateSurveyRequest request = new CreateSurveyRequest("My Survey", List.of("en"));
-        SurveyDefinition saved = new SurveyDefinition(
-                "user-123", "My Survey", QuistionnaireSerializer.serialize(new dk.tinker.model.Questionnaire()));
+        SurveyDefinition saved = new SurveyDefinition("user-123", "My Survey", emptyStructure());
         when(repository.save(any())).thenReturn(saved);
 
         SurveyDetailResponse response = service.createSurvey(auth, request);
@@ -60,8 +64,7 @@ class SurveyDesignServiceTest {
 
     @Test
     void transitionStatus_draftToPublished_succeeds() {
-        SurveyDefinition definition = new SurveyDefinition(
-                "user-123", "Survey", QuistionnaireSerializer.serialize(new dk.tinker.model.Questionnaire()));
+        SurveyDefinition definition = new SurveyDefinition("user-123", "Survey", emptyStructure());
         UUID id = UUID.randomUUID();
         when(repository.findByIdAndOwnerId(id, "user-123")).thenReturn(Optional.of(definition));
         when(repository.save(any())).thenReturn(definition);
@@ -73,8 +76,7 @@ class SurveyDesignServiceTest {
 
     @Test
     void transitionStatus_draftToArchived_throws() {
-        SurveyDefinition definition = new SurveyDefinition(
-                "user-123", "Survey", QuistionnaireSerializer.serialize(new dk.tinker.model.Questionnaire()));
+        SurveyDefinition definition = new SurveyDefinition("user-123", "Survey", emptyStructure());
         UUID id = UUID.randomUUID();
         when(repository.findByIdAndOwnerId(id, "user-123")).thenReturn(Optional.of(definition));
 
@@ -92,8 +94,7 @@ class SurveyDesignServiceTest {
 
     @Test
     void deleteSurvey_nonDraft_throws() {
-        SurveyDefinition definition = new SurveyDefinition(
-                "user-123", "Survey", QuistionnaireSerializer.serialize(new dk.tinker.model.Questionnaire()));
+        SurveyDefinition definition = new SurveyDefinition("user-123", "Survey", emptyStructure());
         definition.transitionStatus(SurveyStatus.PUBLISHED);
         UUID id = UUID.randomUUID();
         when(repository.findByIdAndOwnerId(id, "user-123")).thenReturn(Optional.of(definition));
@@ -103,9 +104,7 @@ class SurveyDesignServiceTest {
 
     @Test
     void addPage_appendsPageToQuestionnaire() {
-        dk.tinker.model.Questionnaire questionnaire = new dk.tinker.model.Questionnaire();
-        SurveyDefinition definition = new SurveyDefinition(
-                "user-123", "Survey", QuistionnaireSerializer.serialize(questionnaire));
+        SurveyDefinition definition = new SurveyDefinition("user-123", "Survey", emptyStructure());
         UUID id = UUID.randomUUID();
         when(repository.findByIdAndOwnerId(id, "user-123")).thenReturn(Optional.of(definition));
         when(repository.save(any())).thenReturn(definition);
