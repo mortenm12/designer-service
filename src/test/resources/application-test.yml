@@ -1,11 +1,7 @@
 spring:
-  datasource:
-    url: jdbc:tc:postgresql:17-alpine:///designerdb
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-  flyway:
-    enabled: true
-  jpa:
-    show-sql: true
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/testdb
   security:
     oauth2:
       resourceserver:
@@ -14,4 +10,4 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
+    org.springframework.data.mongodb: DEBUG

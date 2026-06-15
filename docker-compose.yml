@@ -1,17 +1,15 @@
 services:
 
   db:
-    image: postgres:17-alpine
+    image: mongo:8-jammy
     environment:
-      POSTGRES_DB: designerdb
-      POSTGRES_USER: designer
-      POSTGRES_PASSWORD: designer
+      MONGO_INITDB_DATABASE: designerdb
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongo_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U designer -d designerdb"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,9 +20,7 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: local
-      DB_URL: jdbc:postgresql://db:5432/designerdb
-      DB_USERNAME: designer
-      DB_PASSWORD: designer
+      MONGODB_URI: mongodb://db:27017/designerdb
       JWT_JWK_SET_URI: http://auth:9000/oauth2/jwks
     depends_on:
       db:
@@ -47,4 +43,4 @@ services:
       - prometheus
 
 volumes:
-  postgres_data:
+  mongo_data:

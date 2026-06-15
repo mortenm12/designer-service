@@ -1,10 +1,7 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/designerdb
-    username: designer
-    password: designer
-  jpa:
-    show-sql: true
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/designerdb
   security:
     oauth2:
       resourceserver:
@@ -18,5 +15,4 @@ management:
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.data.mongodb: DEBUG

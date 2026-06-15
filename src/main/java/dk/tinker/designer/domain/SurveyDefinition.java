@@ -1,52 +1,46 @@
 package dk.tinker.designer.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.bson.Document;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "survey_definitions")
+@org.springframework.data.mongodb.core.mapping.Document(collection = "survey_definitions")
 public class SurveyDefinition {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "owner_id", nullable = false)
+    @Indexed
+    @Field("owner_id")
     private String ownerId;
 
     @NotBlank
     @Size(max = 500)
-    @Column(nullable = false, length = 500)
+    @Field("title")
     private String title;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
+    @Indexed
+    @Field("status")
     private SurveyStatus status;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String structure;
+    @Field("structure")
+    private Document structure;
 
-    @CreationTimestamp
-    @Column(updatable = false, nullable = false)
+    @CreatedDate
+    @Field("created_at")
     private Instant createdAt;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
+    @LastModifiedDate
+    @Field("updated_at")
     private Instant updatedAt;
 
     @Version
@@ -54,7 +48,8 @@ public class SurveyDefinition {
 
     protected SurveyDefinition() { }
 
-    public SurveyDefinition(String ownerId, String title, String structure) {
+    public SurveyDefinition(String ownerId, String title, Document structure) {
+        this.id = UUID.randomUUID();
         this.ownerId = ownerId;
         this.title = title;
         this.structure = structure;
@@ -77,7 +72,7 @@ public class SurveyDefinition {
         return status;
     }
 
-    public String getStructure() {
+    public Document getStructure() {
         return structure;
     }
 
@@ -89,12 +84,12 @@ public class SurveyDefinition {
         return updatedAt;
     }
 
-    public void update(String title, String structure) {
+    public void update(String title, Document structure) {
         this.title = title;
         this.structure = structure;
     }
 
-    public void updateStructure(String structure) {
+    public void updateStructure(Document structure) {
         this.structure = structure;
     }
 
