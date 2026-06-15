@@ -16,6 +16,17 @@ spring:
         jwt:
           jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:9000/oauth2/jwks}
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL:http://localhost:9000}
+    internal-secret: ${INTERNAL_SECRET:dev-secret-change-in-production}
+
 management:
   endpoints:
     web:

@@ -35,22 +35,22 @@ repositories {
 }
 
 dependencies {
-    // ── Domain library ────────────────────────────────────────────────────────
+    // ── Domain library ────────────────────────────────────────────────────────────────
     implementation("dk.tinker:survey-lib:0.1.0")
 
-    // ── Core ─────────────────────────────────────────────────────────────────
+    // ── Core ───────────────────────────────────────────────────────────────────────
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    // ── Data ─────────────────────────────────────────────────────────────────
+    // ── Data ───────────────────────────────────────────────────────────────────────
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
-    // ── Security ─────────────────────────────────────────────────────────────
+    // ── Security ─────────────────────────────────────────────────────────────────
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
-    // ── Observability ─────────────────────────────────────────────────────────
+    // ── Observability ──────────────────────────────────────────────────────────────
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
@@ -58,15 +58,22 @@ dependencies {
     // ── API Documentation ─────────────────────────────────────────────────────
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
 
-    // ── Resilience ────────────────────────────────────────────────────────────
+    // ── Messaging ────────────────────────────────────────────────────────────────
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
+
+    // ── Caching ───────────────────────────────────────────────────────────────────
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
+    // ── Resilience ────────────────────────────────────────────────────────────────
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.3.0")
     implementation("io.github.resilience4j:resilience4j-micrometer:2.3.0")
 
-    // ── Dev Tools ────────────────────────────────────────────────────────────
+    // ── Dev Tools ────────────────────────────────────────────────────────────────
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
-    // ── Testing ───────────────────────────────────────────────────────────────
+    // ── Testing ───────────────────────────────────────────────────────────────────
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.springframework.security:spring-security-test")

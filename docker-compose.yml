@@ -14,6 +14,17 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     ports:
@@ -22,8 +33,13 @@ services:
       SPRING_PROFILES_ACTIVE: local
       MONGODB_URI: mongodb://db:27017/designerdb
       JWT_JWK_SET_URI: http://auth:9000/oauth2/jwks
+      AUTH_SERVICE_URL: http://auth:9000
+      RABBITMQ_HOST: rabbitmq
+      INTERNAL_SECRET: dev-secret-change-in-production
     depends_on:
       db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   prometheus:

@@ -1,5 +1,6 @@
 package dk.tinker.designer.config;
 
+import dk.tinker.designer.security.ApiKeyAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -9,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -25,18 +27,22 @@ public class SecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+            ApiKeyAuthFilter apiKeyAuthFilter) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm ->
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/**").hasAuthority("SCOPE_survey:read")
-                        .requestMatchers("/api/**").hasAuthority("SCOPE_survey:write")
+                        .requestMatchers(HttpMethod.GET, "/api/**")
+                                .hasAnyAuthority("SCOPE_survey:read", "SCOPE_read")
+                        .requestMatchers("/api/**")
+                                .hasAnyAuthority("SCOPE_survey:write", "SCOPE_write")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> { }))
+                .addFilterBefore(apiKeyAuthFilter, BearerTokenAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
                         .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
