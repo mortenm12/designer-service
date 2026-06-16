@@ -1,8 +1,10 @@
 package dk.tinker.designer;
 
+import dk.tinker.permissionlib.service.TokenValidationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -13,6 +15,9 @@ import org.testcontainers.containers.MongoDBContainer;
 @ActiveProfiles("test")
 @Import(DesignerApplicationTests.MongoContainerConfig.class)
 class DesignerApplicationTests {
+
+    @MockBean
+    TokenValidationService tokenValidationService;
 
     @Test
     void contextLoads() {

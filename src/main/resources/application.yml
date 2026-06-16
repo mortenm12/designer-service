@@ -10,11 +10,11 @@ spring:
     mongodb:
       uuid-representation: standard
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:9000/oauth2/jwks}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
 
 management:
   endpoints:
@@ -48,6 +48,10 @@ springdoc:
     path: /swagger-ui.html
     operationsSorter: method
   show-actuator: false
+
+permission-lib:
+  auth-service-url: ${AUTH_SERVICE_URL:http://localhost:9000}
+  service-api-key: ${PERMISSION_LIB_API_KEY:}
 
 server:
   port: 8080

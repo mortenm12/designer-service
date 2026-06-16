@@ -2,11 +2,15 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/designerdb
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:9000/oauth2/jwks
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+permission-lib:
+  auth-service-url: http://localhost:9000
+  service-api-key: ${PERMISSION_LIB_API_KEY:local-dev-key}
 
 management:
   tracing:

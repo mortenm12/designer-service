@@ -2,11 +2,15 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${JWT_JWK_SET_URI}
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+permission-lib:
+  auth-service-url: ${AUTH_SERVICE_URL}
+  service-api-key: ${PERMISSION_LIB_API_KEY}
 
 management:
   tracing:
