@@ -32,11 +32,20 @@ repositories {
             password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key") as String?
         }
     }
+    maven {
+        name = "GitHubPackages-permission-lib"
+        url = uri("https://maven.pkg.github.com/mortenm12/permission-lib")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user") as String?
+            password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key") as String?
+        }
+    }
 }
 
 dependencies {
     // ── Domain library ────────────────────────────────────────────────────────
     implementation("dk.tinker:survey-lib:0.1.0")
+    implementation("dk.tinker:permission-lib:1.0.0")
 
     // ── Core ─────────────────────────────────────────────────────────────────
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -48,7 +57,6 @@ dependencies {
 
     // ── Security ─────────────────────────────────────────────────────────────
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
     // ── Observability ─────────────────────────────────────────────────────────
     implementation("io.micrometer:micrometer-registry-prometheus")
