@@ -12,6 +12,8 @@ import dk.tinker.designer.repository.SurveyDefinitionRepository;
 import dk.tinker.model.Page;
 import dk.tinker.model.PageElement;
 import dk.tinker.model.Questionnaire;
+import dk.tinker.permissionlib.model.PermissionLevel;
+import dk.tinker.permissionlib.service.ResourcePermissionService;
 import dk.tinker.util.QuistionnaireSerializer;
 import org.bson.Document;
 import org.springframework.data.domain.Pageable;
@@ -28,9 +30,12 @@ import java.util.UUID;
 public class SurveyDesignService {
 
     private final SurveyDefinitionRepository repository;
+    private final ResourcePermissionService resourcePermissionService;
 
-    public SurveyDesignService(SurveyDefinitionRepository repository) {
+    public SurveyDesignService(SurveyDefinitionRepository repository,
+            ResourcePermissionService resourcePermissionService) {
         this.repository = repository;
+        this.resourcePermissionService = resourcePermissionService;
     }
 
     @Transactional(readOnly = true)
@@ -57,24 +62,24 @@ public class SurveyDesignService {
 
     @Transactional(readOnly = true)
     public SurveyDetailResponse getSurvey(Authentication auth, UUID id) {
-        return toDetailResponse(findOwned(auth, id));
+        return toDetailResponse(findWithMinLevel(auth, id, PermissionLevel.READ));
     }
 
     public SurveyDetailResponse updateSurvey(Authentication auth, UUID id, UpdateSurveyRequest request) {
-        SurveyDefinition definition = findOwned(auth, id);
+        SurveyDefinition definition = findWithMinLevel(auth, id, PermissionLevel.WRITE);
         definition.update(request.title(), toDocument(request.structure()));
         return toDetailResponse(repository.save(definition));
     }
 
     public SurveyDetailResponse transitionStatus(
             Authentication auth, UUID id, StatusTransitionRequest request) {
-        SurveyDefinition definition = findOwned(auth, id);
+        SurveyDefinition definition = findWithMinLevel(auth, id, PermissionLevel.WRITE);
         definition.transitionStatus(request.status());
         return toDetailResponse(repository.save(definition));
     }
 
     public void deleteSurvey(Authentication auth, UUID id) {
-        SurveyDefinition definition = findOwned(auth, id);
+        SurveyDefinition definition = findOwnerOnly(auth, id);
         if (definition.getStatus() != SurveyStatus.DRAFT) {
             throw new IllegalStateException("Only DRAFT surveys can be deleted");
         }
@@ -82,7 +87,7 @@ public class SurveyDesignService {
     }
 
     public SurveyDetailResponse addPage(Authentication auth, UUID surveyId) {
-        SurveyDefinition definition = findOwned(auth, surveyId);
+        SurveyDefinition definition = findWithMinLevel(auth, surveyId, PermissionLevel.WRITE);
         Questionnaire questionnaire = fromDocument(definition.getStructure());
         questionnaire.addPage(new Page());
         definition.updateStructure(toDocument(questionnaire));
@@ -90,7 +95,7 @@ public class SurveyDesignService {
     }
 
     public SurveyDetailResponse replacePage(Authentication auth, UUID surveyId, UUID pageId, Page page) {
-        SurveyDefinition definition = findOwned(auth, surveyId);
+        SurveyDefinition definition = findWithMinLevel(auth, surveyId, PermissionLevel.WRITE);
         Questionnaire questionnaire = fromDocument(definition.getStructure());
         List<Page> pages = questionnaire.getPages();
         int index = findPageIndex(pages, pageId);
@@ -101,7 +106,7 @@ public class SurveyDesignService {
     }
 
     public SurveyDetailResponse removePage(Authentication auth, UUID surveyId, UUID pageId) {
-        SurveyDefinition definition = findOwned(auth, surveyId);
+        SurveyDefinition definition = findWithMinLevel(auth, surveyId, PermissionLevel.WRITE);
         Questionnaire questionnaire = fromDocument(definition.getStructure());
         List<Page> pages = questionnaire.getPages();
         int index = findPageIndex(pages, pageId);
@@ -112,7 +117,7 @@ public class SurveyDesignService {
 
     public SurveyDetailResponse addElement(
             Authentication auth, UUID surveyId, UUID pageId, PageElement element) {
-        SurveyDefinition definition = findOwned(auth, surveyId);
+        SurveyDefinition definition = findWithMinLevel(auth, surveyId, PermissionLevel.WRITE);
         Questionnaire questionnaire = fromDocument(definition.getStructure());
         Page page = findPage(questionnaire.getPages(), pageId);
         page.addPageElement(element);
@@ -122,7 +127,7 @@ public class SurveyDesignService {
 
     public SurveyDetailResponse replaceElement(
             Authentication auth, UUID surveyId, UUID pageId, UUID elementId, PageElement element) {
-        SurveyDefinition definition = findOwned(auth, surveyId);
+        SurveyDefinition definition = findWithMinLevel(auth, surveyId, PermissionLevel.WRITE);
         Questionnaire questionnaire = fromDocument(definition.getStructure());
         Page page = findPage(questionnaire.getPages(), pageId);
         List<PageElement> elements = page.getPageElements();
@@ -135,7 +140,7 @@ public class SurveyDesignService {
 
     public SurveyDetailResponse removeElement(
             Authentication auth, UUID surveyId, UUID pageId, UUID elementId) {
-        SurveyDefinition definition = findOwned(auth, surveyId);
+        SurveyDefinition definition = findWithMinLevel(auth, surveyId, PermissionLevel.WRITE);
         Questionnaire questionnaire = fromDocument(definition.getStructure());
         Page page = findPage(questionnaire.getPages(), pageId);
         List<PageElement> elements = page.getPageElements();
@@ -145,7 +150,20 @@ public class SurveyDesignService {
         return toDetailResponse(repository.save(definition));
     }
 
-    private SurveyDefinition findOwned(Authentication auth, UUID id) {
+    private SurveyDefinition findWithMinLevel(Authentication auth, UUID id, PermissionLevel required) {
+        String subject = auth.getName();
+        SurveyDefinition survey = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Survey", id));
+        if (survey.getOwnerId().equals(subject)) {
+            return survey;
+        }
+        if (resourcePermissionService.hasPermission(subject, "survey", id.toString(), required)) {
+            return survey;
+        }
+        throw new ResourceNotFoundException("Survey", id);
+    }
+
+    private SurveyDefinition findOwnerOnly(Authentication auth, UUID id) {
         return repository.findByIdAndOwnerId(id, auth.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("Survey", id));
     }

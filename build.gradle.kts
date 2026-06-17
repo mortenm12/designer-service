@@ -45,7 +45,7 @@ repositories {
 dependencies {
     // ── Domain library ────────────────────────────────────────────────────────
     implementation("dk.tinker:survey-lib:0.1.0")
-    implementation("dk.tinker:permission-lib:1.0.0")
+    implementation("dk.tinker:permission-lib:1.0.1")
 
     // ── Core ─────────────────────────────────────────────────────────────────
     implementation("org.springframework.boot:spring-boot-starter-web")
